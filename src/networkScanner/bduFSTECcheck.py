@@ -1,34 +1,7 @@
 import re
 import pandas
 from packaging import version
-from typing import List, Dict
-from networkScanner.customTypes import FieldInfo
-
-class VulnInfo():
-    id: FieldInfo
-    cve: FieldInfo
-    name: FieldInfo
-    versions: FieldInfo
-    describtion: FieldInfo
-
-    def __init__(self):
-        self.id = FieldInfo('id')
-        self.cve = FieldInfo('cve')
-        self.name = FieldInfo('name')
-        self.versions = FieldInfo('versions')
-        self.describtion = FieldInfo('describtion')
-    
-    def getDictMapping(self) -> Dict[str, str]:
-        result = dict()
-
-        result.update({self.id.name: self.id.value})
-        result.update({self.cve.name: self.cve.value})
-        result.update({self.name.name: self.name.value})
-        result.update({self.versions.name: self.versions.value})
-        result.update({self.describtion.name: self.describtion.value})
-
-        return result
-
+from networkScanner.customTypes import *
 
 def searchPatternVersion(versions: str, cur_ver: str) -> bool:
     for current_service_version in versions.split(','):
@@ -67,7 +40,7 @@ def searchPatternVersion(versions: str, cur_ver: str) -> bool:
 def findVulnFSTEC(serviceName: str, serviceVersion: str, bduFSTEC: pandas.DataFrame) -> List[VulnInfo]:
     #читаем построчно датафрейм, чтобы найти возможные уязвимости для данного ПО
 
-    result = []
+    result: List[VulnInfo] = []
 
     for _, row in bduFSTEC.iterrows():
         softName = str(row.get('Название ПО'))
@@ -75,14 +48,13 @@ def findVulnFSTEC(serviceName: str, serviceVersion: str, bduFSTEC: pandas.DataFr
         if serviceName.lower() in softName.lower():
             try:
                 if searchPatternVersion(versions, serviceVersion):
-                    newVuln = VulnInfo()
-
-                    newVuln.id.value = str(row.get('Идентификатор'))
-                    newVuln.cve.value = str(row.get('Идентификаторы других систем описаний уязвимости'))
-                    newVuln.name.value = str(row.get('Название ПО'))
-                    newVuln.versions.value = str(row.get('Версия ПО'))
-                    newVuln.describtion.value = str(row.get('Описание уязвимости'))
-            
+                    newVuln = VulnInfo(
+                        id=str(row.get('Идентификатор')),
+                        cve=str(row.get('Идентификаторы других систем описаний уязвимости')),
+                        name=str(row.get('Название ПО')),
+                        versions=str(row.get('Версия ПО')),
+                        describtion=str(row.get('Описание уязвимости'))
+                    )
                     result.append(newVuln)
             except Exception:
                 continue
